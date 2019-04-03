@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import svm
 import jieba
-from sklearn.metrics import precision_score
+from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
 import jieba.analyse
 import multiprocessing
@@ -18,6 +18,7 @@ import gensim
 from sklearn.ensemble import AdaBoostClassifier
 import datetime
 from collections import defaultdict
+from sklearn.metrics import confusion_matrix
 starttime = datetime.datetime.now()
 
 #long running
@@ -76,11 +77,13 @@ def conf(sendict,data,neg_word):
             else:
                 score += w*float(senword[i])
                 sen_index +=1
-
-
-
-
     return score
+
+def c(x):
+    if x==0:
+        return 1
+    else:
+        return 0
 if __name__ == '__main__':
 
     file_in = 'F:\\pycharm\\workspace\\test_1\\np_f2.txt'
@@ -102,20 +105,20 @@ if __name__ == '__main__':
         #cut_dict.append(l2d(i.strip().split(' ')))
         data_dict = l2d(i.strip().split(' '))
         score=conf(sendict,data_dict,neg_word)
-        if score>0:
-            score=0
-        else:
+        if score>=0:
             score=1
+        else:
+            score=0
         result_y.append(score)
 
 
     train = pd.read_csv('F:\\pycharm\\workspace\\test_1\\train_x_y.csv', sep=' ', encoding='utf-8')
-    result_y_real = list(train['y'])
+    result_y_real = list(train['y'].apply(c))
     k=0
     for i in range(len(result_y)):
         if result_y[i]==result_y_real[i]:
             k+=1
-    print('正确率为：',precision_score(result_y_real,result_y))
+    print('正确率为：',accuracy_score(result_y_real,result_y))
     print('召回率为',recall_score(result_y_real,result_y))
 
     endtime = datetime.datetime.now()
@@ -123,7 +126,9 @@ if __name__ == '__main__':
     print (endtime - starttime)
 
 
-
-
+    cm=confusion_matrix(result_y_real,result_y)
+    # fpr=FP/N tpr=TP/P
+    tpr =cm[0][0]/(cm[0][0]+cm[0][1])
+    fpr = cm[1][0]/(cm[1][0]+cm[1][1])
 
 
